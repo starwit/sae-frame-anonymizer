@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mystage"
+name = "frameanonymizer"
 version = "0.1.0"
 description = ""
 authors = ["flonix8 <flstanek@googlemail.com>"]

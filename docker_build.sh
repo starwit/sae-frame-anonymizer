@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t starwitorg/sae-my-stage:local .
+docker build -t starwitorg/sae-frame-anonymizer:local .

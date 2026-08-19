@@ -1,9 +1,9 @@
 import pytest
 
-def test_mystage_import():
+def test_frameanonymizer_import():
     try:
-        from mystage.mystage import MyStage
+        from frameanonymizer.frameanonymizer import FrameAnonymizer
     except ImportError as e:
-        pytest.fail(f"Failed to import MyStage: {e}")
+        pytest.fail(f"Failed to import FrameAnonymizer: {e}")
 
-    assert MyStage is not None, "MyStage should be imported successfully"
+    assert FrameAnonymizer is not None, "FrameAnonymizer should be imported successfully"
