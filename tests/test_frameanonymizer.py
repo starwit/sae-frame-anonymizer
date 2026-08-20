@@ -3,7 +3,8 @@ import pytest
 from visionapi.sae_pb2 import SaeMessage
 from visionlib.pipeline.tools import jpeg
 
-from frameanonymizer.frameanonymizer import FrameAnonymizer
+from frameanonymizer.frameanonymizer import (FrameAnonymizer,
+                                             _kernel_size_for_sigma)
 
 from .helpers import (FRAME_HEIGHT, FRAME_WIDTH, make_config, make_noise_image,
                       make_sae_msg_bytes)
@@ -131,6 +132,33 @@ def test_degenerate_boxes_do_not_crash(anonymizer, box):
 
     assert output is not None
     assert _raw_frame_to_image(_parse(output)).shape == image.shape
+
+
+@pytest.mark.parametrize('sigma', [0.1, 1.0, 5.0, 30.0, 180.0])
+def test_kernel_size_is_odd_and_variance_matched(sigma):
+    kernel_size = _kernel_size_for_sigma(sigma)
+
+    # OpenCV requires an odd, positive kernel size
+    assert kernel_size >= 3
+    assert kernel_size % 2 == 1
+
+    # A box of width k has variance (k^2 - 1) / 12, which should match the Gaussian it replaces.
+    # Only checked for sigmas where rounding to an odd kernel size is not the dominant error.
+    if sigma >= 5.0:
+        assert (kernel_size ** 2 - 1) / 12 == pytest.approx(sigma ** 2, rel=0.05)
+
+
+def test_stronger_blur_leaves_less_detail(anonymizer):
+    image = make_noise_image()
+    input_bytes = make_sae_msg_bytes(image=image, detections=[(ANONYMIZED_CLASS, ANONYMIZED_BOX)])
+    min_x, min_y, max_x, max_y = _to_px(ANONYMIZED_BOX)
+
+    def residual_detail(blur_strength):
+        anonymizer.config.anonymization.blur_strength = blur_strength
+        output_image = _raw_frame_to_image(_parse(anonymizer.get(input_bytes)))
+        return np.var(output_image[min_y:max_y, min_x:max_x].astype(np.float64))
+
+    assert residual_detail(0.5) < residual_detail(0.05) < np.var(image[min_y:max_y, min_x:max_x].astype(np.float64))
 
 
 def test_message_without_detections_is_forwarded(anonymizer):
