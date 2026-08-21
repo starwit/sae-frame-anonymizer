@@ -1,9 +1,20 @@
 import os
+from typing import List
+
 from pydantic import BaseModel, Field
 from pydantic_settings import (BaseSettings, SettingsConfigDict,
                                YamlConfigSettingsSource)
 from typing_extensions import Annotated
 from visionlib.pipeline.settings import LogLevel
+
+
+class AnonymizationConfig(BaseModel):
+    # The class ids whose detections should be anonymized (no default on purpose, this has to be an explicit decision)
+    class_ids: Annotated[List[int], Field(min_length=1)]
+    # Gaussian sigma as a fraction of the (smaller) bounding box dimension, i.e. blur strength is independent of object size
+    blur_strength: Annotated[float, Field(gt=0, le=1)] = 0.15
+    # Only relevant for frames that arrive as JPEG (they are re-encoded after anonymization)
+    jpeg_quality: Annotated[int, Field(ge=1, le=100)] = 85
 
 
 class RedisConfig(BaseModel):
@@ -15,6 +26,7 @@ class RedisConfig(BaseModel):
 
 class FrameAnonymizerConfig(BaseSettings):
     log_level: LogLevel = LogLevel.WARNING
+    anonymization: AnonymizationConfig
     redis: RedisConfig
     prometheus_port: Annotated[int, Field(ge=1024, le=65536)] = 8000
 

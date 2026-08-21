@@ -36,7 +36,7 @@ def run_stage():
 
     start_http_server(CONFIG.prometheus_port)
 
-    logger.info(f'Starting geo mapper stage. Config: {CONFIG.model_dump_json(indent=2)}')
+    logger.info(f'Starting frame anonymizer stage. Config: {CONFIG.model_dump_json(indent=2)}')
 
     frame_anonymizer = FrameAnonymizer(CONFIG)
 
